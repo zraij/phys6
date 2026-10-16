@@ -92,6 +92,7 @@ ol.steps{margin:6px 0 0;padding-inline-start:20px;color:var(--mu);font-size:13px
 <h1>إدارة الحسابات</h1><p class="s">خاصة بصاحب الموقع</p>
 <label for="lu">اسم المستخدم</label><input class="ltr" id="lu" type="text" autocomplete="username" autocapitalize="none" required>
 <label for="lp">كلمة المرور</label><input class="ltr" id="lp" type="password" autocomplete="current-password" required>
+<label class="rem"><input type="checkbox" id="lr" checked> تذكّرني على هذا الجهاز</label>
 <button id="lb" type="submit">دخول</button><div class="err" id="le"></div>
 </form>
 
@@ -170,9 +171,24 @@ $('#login').onsubmit = async (e) => {
   const lu = AU.norm($('#lu').value), lp = $('#lp').value;
   if (r.entry.x) { try { AK = await unseal(await wk(lu, lp, r.entry, 'decrypt'), r.entry.x, r.entry.i + ':x'); } catch (_) { AK = null; } }
   else if (!U.u.some((x) => x.p)) { AK = AU.rnd(32); await wrapAK(r.entry, lu, lp); bump(); }
-  $('#login').hidden = true; $('#panel').hidden = false; $('#tok').value = tok() ? '••••••••' : '';
-  await render();
+  sess.set({ k: AU.bu(K), a: AK ? AU.bu(AK) : '', i: ME }, $('#lr').checked);
+  await openPanel();
 };
+async function openPanel() { $('#login').hidden = true; $('#panel').hidden = false; $('#tok').value = tok() ? '••••••••' : ''; await render(); }
+// "remember me": the admin's keys stay on this device (localStorage) or this tab only (sessionStorage)
+const SK = 'phys.admin.v1';
+const sess = { get() { try { return JSON.parse(localStorage.getItem(SK) || sessionStorage.getItem(SK)); } catch (_) { return null; } },
+  set(v, keep) { try { (keep ? localStorage : sessionStorage).setItem(SK, JSON.stringify(v)); } catch (_) {} },
+  clear() { try { localStorage.removeItem(SK); sessionStorage.removeItem(SK); } catch (_) {} } };
+(async () => {
+  const st = sess.get(); if (!st || !st.k || !st.i) return;
+  try {
+    U = await loadUsers(); const e = U.u.find((x) => x.i === st.i && x.a); if (!e) throw 0;
+    K = AU.ub(st.k); metas.set(e.i, await AU.meta(K, e)); ME = e.i; AK = st.a ? AU.ub(st.a) : null;
+    const probe = U.u.find((x) => x.p); if (AK && probe && (await getPw(probe)) === null) AK = null;
+    await openPanel();
+  } catch (_) { sess.clear(); U = null; K = null; ME = null; AK = null; metas.clear(); }
+})();
 async function render() {
   for (const e of U.u) if (!metas.has(e.i)) { try { metas.set(e.i, await AU.meta(K, e)); } catch (_) { metas.set(e.i, { u: '?', n: '?' }); } }
   $('#cnt').textContent = U.u.length;
@@ -237,7 +253,7 @@ $('#save').onclick = async () => {
   } catch (x) { msg(sm, 'ما انحفظ: ' + x.message); }
   b.disabled = false; b.textContent = 'حفظ التغييرات على الموقع';
 };
-$('#out').onclick = () => location.reload();
+$('#out').onclick = () => { if (pend && !confirm('عندك تغييرات غير محفوظة، تطلع؟')) return; pend = 0; sess.clear(); location.reload(); };
 window.addEventListener('beforeunload', (e) => { if (pend) { e.preventDefault(); e.returnValue = ''; } });
 </script>
 <footer style="text-align:center;margin:28px auto 16px;color:#9A9CC0;font-size:12px;line-height:2">تصميم وبرمجة: <b style="color:#A58DFF">حسام عبدالمنعم</b> · <span dir="ltr">📱 07746451098</span><br>© 2026 — جميع الحقوق محفوظة</footer>
