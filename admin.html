@@ -116,7 +116,7 @@ ol.steps{margin:6px 0 0;padding-inline-start:20px;color:var(--mu);font-size:13px
     <ol class="steps">
       <li>افتح <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">صفحة إنشاء التوكن</a>.</li>
       <li>اكتب أي اسم، واختر مدة الصلاحية.</li>
-      <li>Repository access ← Only select repositories ← <b>chem6</b>.</li>
+      <li>Repository access ← Only select repositories ← <b>phys6</b>.</li>
       <li>Permissions ← Contents ← <b>Read and write</b>.</li>
       <li>Generate token، انسخه والصقه هنا.</li>
     </ol>
@@ -134,7 +134,7 @@ ol.steps{margin:6px 0 0;padding-inline-start:20px;color:var(--mu);font-size:13px
 </main>
 </div>
 <script>
-const OWNER = 'zraij', REPO = 'chem6', EMB = {"it":150000,"ss":"j+z/WZLw9HadK97OUNUdkw==","u":[{"i":"beb043c8ac6738c21cb5d4c8","a":1,"s":"0OWrrfOhkgJsKDNsSg9Gyg==","v":"3iW0tXzfernBKeTS","k":"qXe7pqy46ltMWbRgz3LmaCpZQjSN/V6JnyyulG5wZf0iTW3GnDPIP3zazfDD+WIy","m":"JDbS+9EiXHj/uYCO.1WALEORmyS5hGTIzriF7X2R8Y2515tNgLdEySuxpq4eadKJ5Kz8iX7m6L1FXCezLRh9+3bhRf27a4w9tCCSzmmbiEjqN4/bpururOBdlrg=="},{"i":"44bba213e59e903470e30a82","a":0,"s":"uWU60WOntbaroanl+btJjQ==","v":"Qup3mgKfnTYdaUUC","k":"P8T4Hw97tFmZGBzzho6GS8sbIgpJCRLlrtD4NyZwsSlwWyg0aJ8Z6e4mN5bM2fuZ","m":"UafcrcRWnKT0KCpj.u+PNftFXswtl6/+0ysTDF688g04OSuY5/ZtpUMam4iqquXVIQSLspGBA6yeLZnRZJjygKclwVGTYoOxX6JAHjqcqPPCPcDywJg=="}]}, TK = 'chem.gh.token';
+const OWNER = 'zraij', REPO = 'phys6', EMB = {"it":150000,"ss":"ZNepj26AsulvLl7KLbkwSw==","u":[{"i":"3961e159fabf243038482967","a":1,"s":"yHy3iZQzy5f8utXrO4l/xg==","v":"xAmAch6D14NFu+DX","k":"2ODXSXin11rC6ec4LCTH+RxNoQTk5zbPo9NOzGIhNLOVEXiIsorz6ufMIb1834yi","m":"ADxMZ7Sg6hlAzjdk.vSZAjOmh2WOC6ZcQP7i1I4Iaz2EyMQ7+eh4bLQ6zQJIo0KS7Ofiz6ZUEHkJxOv2/4LcUo5kf5to1habdwOJgKGU="}]}, TK = 'phys.gh.token';
 const API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/users.json`;
 const $ = (s) => document.querySelector(s);
 let U = null, K = null, ME = null, metas = new Map(), pend = 0;
