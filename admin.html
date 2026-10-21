@@ -83,6 +83,9 @@ td button{padding:6px 10px;font-size:13px}td.pwc{white-space:nowrap}td .pwin{wid
 ol.steps{margin:6px 0 0;padding-inline-start:20px;color:var(--mu);font-size:13px;line-height:1.9}
 .msg{margin-top:8px;font-size:14px;min-height:20px}.msg.ok{color:var(--c6)}.msg.bad{color:var(--c4)}
 .empty{color:var(--mu);text-align:center;padding:16px}
+td .tag.scr{background:#33C6C633;color:var(--c2)}
+.g3{display:grid;grid-template-columns:1.3fr 1fr 1.2fr;gap:0 12px}@media(max-width:760px){.g3{grid-template-columns:1fr}}
+#scrf button[type=submit]{margin-top:14px}
 @media(max-width:600px){thead{display:none}table,tbody,tr,td{display:block}tr{border-bottom:1px solid var(--ln);padding:10px 0}td{border:0;padding:3px 0}td.u{text-align:right}td.pwc{white-space:normal;display:flex;flex-wrap:wrap;gap:6px;align-items:center}td.pwc .pwin{flex:1 1 100%;width:100%}.card{padding:16px}header h1{font-size:20px}.bar{flex-direction:column;align-items:stretch}.bar .row{justify-content:stretch}.bar .row button{flex:1}}
 </style>
 </head><body><div class="wrap">
@@ -126,6 +129,18 @@ ol.steps{margin:6px 0 0;padding-inline-start:20px;color:var(--mu);font-size:13px
     <div class="msg" id="nm"></div>
   </div>
 </div>
+<form class="card" id="scrf" style="margin-top:14px">
+  <h2>🖥️ إضافة شاشة تفاعلية</h2>
+  <p class="hint">حساب خاص بشاشة الصف حتى ما تنقفل حسابات الأساتذة على الشاشة. ينربط بأول شاشة يُفتح عليها، ويبقى مسجّل دخول عليها دائماً. سوّ حساب لكل شاشة.</p>
+  <div class="g3">
+    <div><label for="sn">اسم الشاشة / القاعة</label><input id="sn" type="text" placeholder="مثلاً: شاشة قاعة 3"></div>
+    <div><label for="su">اسم المستخدم</label><input class="ltr" id="su" type="text" autocapitalize="none" spellcheck="false"></div>
+    <div><label for="sp">كلمة المرور</label><div class="row"><input class="ltr" id="sp" type="text" spellcheck="false" autocomplete="off"><button class="ghost" type="button" id="sgen">توليد</button></div></div>
+  </div>
+  <button type="submit" style="width:100%">إضافة الشاشة</button>
+  <div class="msg" id="smsg"></div>
+  <div class="cred" id="scred"></div>
+</form>
 <div class="card" style="margin-top:14px">
   <h2>الحسابات (<span id="cnt">0</span>)</h2>
   <p class="hint">حذف الحساب يمنع دخوله، ويخرجه تلقائياً من أي جهاز كان مسجّل عليه بعد ما ينحفظ التغيير.</p>
@@ -151,9 +166,11 @@ async function wrapAK(ent, u, pw) { if (AK) ent.x = await seal(await wk(AU.norm(
 async function setPw(ent, pw) { if (AK) ent.p = await seal(await akKey(['encrypt']), te.encode(pw), ent.i + ':p'); }
 async function getPw(ent) { if (!ent.p || !AK) return null; try { return td.decode(await unseal(await akKey(['decrypt']), ent.p, ent.i + ':p')); } catch (_) { return null; } }
 const siteUrl = () => location.href.replace(/admin\.html.*$/, '').replace(/[?#].*$/, '');
-const credText = (n, u, p) => `هلا ${n} 🌷\nهذا حسابك على موقع «فيزياء السادس العلمي»:\nالرابط: ${siteUrl()}\nاسم المستخدم: ${u}\nكلمة المرور: ${p}\nملاحظة: الحساب يشتغل على جهاز واحد فقط، فسجّل الدخول من الجهاز اللي راح تستعمله.`;
+const credText = (n, u, p, scr) => scr
+  ? `حساب الشاشة التفاعلية «${n}» على موقع «فيزياء السادس العلمي»:\nرابط التثبيت: ${siteUrl()}install.html\nاسم المستخدم: ${u}\nكلمة المرور: ${p}\nطريقة التشغيل على الشاشة:\n1) افتح الرابط بمتصفح Chrome على الشاشة واضغط «تثبيت التطبيق».\n2) افتح التطبيق من أيقونته وسجّل الدخول، ويبقى محفوظاً.\nملاحظة: هذا الحساب ينربط بهذه الشاشة فقط، فلا تستخدمه على الموبايل.`
+  : `هلا ${n} 🌷\nهذا حسابك على موقع «فيزياء السادس العلمي»:\nرابط التثبيت: ${siteUrl()}install.html\nاسم المستخدم: ${u}\nكلمة المرور: ${p}\nملاحظة: الحساب يشتغل على جهاز واحد فقط. افتح الرابط من الجهاز اللي راح تستعمله، ثبّت التطبيق، ثم سجّل الدخول من داخل التطبيق.`;
 async function copyText(t) { try { await navigator.clipboard.writeText(t); return true; } catch (_) { const a = document.createElement('textarea'); a.value = t; a.style.position = 'fixed'; a.style.opacity = '0'; document.body.appendChild(a); a.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (_) {} a.remove(); return ok; } }
-function showCred(n, u, p) { const c = $('#cred'); c.innerHTML = `${esc(credText(n, u, p))}<div style="margin-top:8px"><button class="ghost" type="button" id="credCopy">نسخ الرسالة</button></div>`; c.classList.add('on'); $('#credCopy').onclick = async () => { $('#credCopy').textContent = (await copyText(credText(n, u, p))) ? 'انتسخت ✓' : 'انسخها يدوياً'; }; }
+function showCred(n, u, p, scr, box = '#cred') { const c = $(box), t = credText(n, u, p, scr); c.innerHTML = `${esc(t)}<div style="margin-top:8px"><button class="ghost" type="button">نسخ الرسالة</button></div>`; c.classList.add('on'); const b = c.querySelector('button'); b.onclick = async () => { b.textContent = (await copyText(t)) ? 'انتسخت ✓' : 'انسخها يدوياً'; }; }
 const tok = () => { try { return localStorage.getItem(TK) || ''; } catch (_) { return ''; } };
 const msg = (el, t, ok) => { el.textContent = t; el.className = 'msg ' + (ok ? 'ok' : 'bad'); };
 const gh = (url, opt = {}) => fetch(url, { ...opt, headers: { Authorization: 'Bearer ' + tok(), Accept: 'application/vnd.github+json', ...(opt.headers || {}) } });
@@ -174,7 +191,7 @@ $('#login').onsubmit = async (e) => {
   sess.set({ k: AU.bu(K), a: AK ? AU.bu(AK) : '', i: ME }, $('#lr').checked);
   await openPanel();
 };
-async function openPanel() { $('#login').hidden = true; $('#panel').hidden = false; $('#tok').value = tok() ? '••••••••' : ''; await render(); }
+async function openPanel() { $('#login').hidden = true; $('#panel').hidden = false; $('#tok').value = tok() ? '••••••••' : ''; await render(); fillScreen(); }
 // "remember me": the admin's keys stay on this device (localStorage) or this tab only (sessionStorage)
 const SK = 'phys.admin.v1';
 const sess = { get() { try { return JSON.parse(localStorage.getItem(SK) || sessionStorage.getItem(SK)); } catch (_) { return null; } },
@@ -196,9 +213,9 @@ async function render() {
   $('#list').innerHTML = U.u.map((e) => { const m = metas.get(e.i), pw = pws.get(e.i), me = e.i === ME;
     const pcell = me ? '<span style="color:var(--mu);font-size:13px">—</span>' : pw ? `<span class="pw">${shown.has(e.i) ? esc(pw) : '••••••'}</span> <button class="ghost" data-s="${e.i}">${shown.has(e.i) ? 'إخفاء' : 'إظهار'}</button> <button class="ghost" data-c="${e.i}">نسخ الرسالة</button> <button class="ghost" data-e="${e.i}">تغيير</button>` : `<span style="color:var(--mu);font-size:13px">غير محفوظة</span> <button class="ghost" data-e="${e.i}">تغيير</button>`;
     const ecell = `<input class="ltr pwin" id="pwin" type="text" spellcheck="false" autocomplete="off" minlength="6" value="${esc(pw || '')}" placeholder="كلمة المرور الجديدة"> <button class="ghost" data-g="1">توليد</button> <button data-ps="${e.i}">حفظ</button> <button class="ghost" data-x="1">إلغاء</button>`;
-    return `<tr><td>${esc(m.n)} ${e.a ? '<span class="tag">مدير</span>' : ''}</td><td class="u">${esc(m.u)}</td><td>${esc(m.t || '')}</td><td class="pwc">${editing === e.i && !me ? ecell : pcell}</td><td>${me ? '<span style="color:var(--mu);font-size:13px">أنت</span>' : `<button class="danger" data-d="${e.i}">حذف</button>`}</td></tr>`; }).join('') || '<tr><td colspan="5" class="empty">لا توجد حسابات</td></tr>';
+    return `<tr><td>${esc(m.n)} ${e.a ? '<span class="tag">مدير</span>' : ''}${e.d ? '<span class="tag scr">شاشة</span>' : ''}</td><td class="u">${esc(m.u)}</td><td>${esc(m.t || '')}</td><td class="pwc">${editing === e.i && !me ? ecell : pcell}</td><td>${me ? '<span style="color:var(--mu);font-size:13px">أنت</span>' : `<button class="danger" data-d="${e.i}">حذف</button>`}</td></tr>`; }).join('') || '<tr><td colspan="5" class="empty">لا توجد حسابات</td></tr>';
   $$('[data-s]').forEach((b) => b.onclick = () => { const i = b.dataset.s; shown.has(i) ? shown.delete(i) : shown.add(i); render(); });
-  $$('[data-c]').forEach((b) => b.onclick = async () => { const m = metas.get(b.dataset.c); b.textContent = (await copyText(credText(m.n, m.u, pws.get(b.dataset.c)))) ? 'انتسخت ✓' : 'تعذّر النسخ'; setTimeout(() => { b.textContent = 'نسخ الرسالة'; }, 2000); });
+  $$('[data-c]').forEach((b) => b.onclick = async () => { const m = metas.get(b.dataset.c); b.textContent = (await copyText(credText(m.n, m.u, pws.get(b.dataset.c), (U.u.find((x) => x.i === b.dataset.c) || {}).d))) ? 'انتسخت ✓' : 'تعذّر النسخ'; setTimeout(() => { b.textContent = 'نسخ الرسالة'; }, 2000); });
   $$('[data-e]').forEach((b) => b.onclick = () => { if (!AK) return msg($('#am'), 'ما تكدر تحفظ كلمات المرور من هذا الحساب'); editing = b.dataset.e; render().then(() => { const i = $('#pwin'); if (i) { i.focus(); i.select(); } }); });
   $$('[data-x]').forEach((b) => b.onclick = () => { editing = null; render(); });
   $$('[data-g]').forEach((b) => b.onclick = () => { $('#pwin').value = genPw(); });
@@ -206,9 +223,9 @@ async function render() {
     const old = U.u.find((x) => x.i === b.dataset.ps), m = metas.get(old.i), np = $('#pwin').value.trim();
     if (np.length < 6) return msg($('#am'), 'كلمة المرور قصيرة (6 أحرف على الأقل)');
     if (np === pws.get(old.i)) { editing = null; return render(); }
-    const ent = await AU.makeEntry(U, K, m.u, np, m.n, old.a);
+    const ent = await AU.makeEntry(U, K, m.u, np, m.n, old.a); if (old.d) ent.d = 1;
     await setPw(ent, np); if (ent.a) await wrapAK(ent, m.u, np); U.u[U.u.indexOf(old)] = ent; metas.set(ent.i, { ...m, t: new Date().toISOString().slice(0, 10) }); shown.add(ent.i); editing = null;
-    bump(); await render(); msg($('#am'), `تغيّرت كلمة مرور ${m.n} (القديمة تبطل بعد الحفظ)، اضغط «حفظ التغييرات» ثم أرسلها`, true); showCred(m.n, m.u, np); });
+    bump(); await render(); msg($('#am'), `تغيّرت كلمة مرور ${m.n} (القديمة تبطل بعد الحفظ)، اضغط «حفظ التغييرات» ثم أرسلها`, true); showCred(m.n, m.u, np, old.d); });
   $$('[data-d]').forEach((b) => b.onclick = () => { const m = metas.get(b.dataset.d); if (!b.dataset.c) { b.dataset.c = 1; b.textContent = 'تأكيد الحذف؟'; return; } U.u = U.u.filter((x) => x.i !== b.dataset.d); bump(); render(); msg($('#am'), `حُذف ${m.n}، اضغط حفظ`, true); });
   $('#pend').textContent = pend; $('#bar').classList.toggle('on', pend > 0);
 }
@@ -224,8 +241,22 @@ $('#addf').onsubmit = async (e) => {
   const id = await AU.uidOf(U, u); if (U.u.some((x) => x.i === id)) return msg($('#am'), 'اسم المستخدم موجود مسبقاً');
   const ent = await AU.makeEntry(U, K, u, p, n, $('#aa').checked); await setPw(ent, p); if (ent.a) await wrapAK(ent, u, p); U.u.push(ent); metas.set(ent.i, { u, n, t: new Date().toISOString().slice(0, 10) });
   bump(); await render(); msg($('#am'), `أُضيف ${n}، لا تنسى تضغط «حفظ التغييرات»`, true);
-  showCred(n, u, p);
+  showCred(n, u, p, 0);
   $('#an').value = ''; $('#au').value = ''; $('#ap').value = ''; $('#aa').checked = false;
+};
+// حسابات الشاشات التفاعلية: حساب عادي (بدون إدارة) عليه علامة d=1، يبقى مسجّل دخول دائماً على الشاشة
+function nextScreenUser() { let n = 0; for (const m of metas.values()) { const x = /^screen(\d+)$/.exec((m && m.u) || ''); if (x) n = Math.max(n, +x[1]); } return 'screen' + (n + 1); }
+function fillScreen() { if (!$('#su').value) $('#su').value = nextScreenUser(); if (!$('#sp').value) $('#sp').value = genPw(); }
+$('#sgen').onclick = () => { $('#sp').value = genPw(); };
+$('#scrf').onsubmit = async (e) => {
+  e.preventDefault(); const n = $('#sn').value.trim(), u = AU.norm($('#su').value), p = $('#sp').value.trim();
+  if (!n) return msg($('#smsg'), 'اكتب اسم الشاشة أو القاعة');
+  if (!/^[a-z0-9._-]{3,30}$/.test(u)) return msg($('#smsg'), 'اسم المستخدم لازم يكون إنكليزي (حروف وأرقام و . _ -) من 3 أحرف أو أكثر');
+  if (p.length < 6) return msg($('#smsg'), 'كلمة المرور قصيرة (6 أحرف على الأقل)');
+  const id = await AU.uidOf(U, u); if (U.u.some((x) => x.i === id)) return msg($('#smsg'), 'اسم المستخدم موجود مسبقاً');
+  const ent = await AU.makeEntry(U, K, u, p, n, false); ent.d = 1; await setPw(ent, p); U.u.push(ent); metas.set(ent.i, { u, n, t: new Date().toISOString().slice(0, 10) });
+  bump(); await render(); msg($('#smsg'), `أُضيفت ${n}، لا تنسى تضغط «حفظ التغييرات»`, true); showCred(n, u, p, 1, '#scred');
+  $('#sn').value = ''; $('#su').value = ''; $('#sp').value = ''; fillScreen();
 };
 $('#tokSave').onclick = async () => {
   const v = $('#tok').value.trim(); if (!v || v.startsWith('•')) return;
