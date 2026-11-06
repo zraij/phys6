@@ -37,7 +37,7 @@ button.ghost{background:var(--p2);color:var(--ink);border:1px solid var(--ln)}bu
 button:disabled{opacity:.55;cursor:wait}
 .err{min-height:22px;margin-top:12px;text-align:center;color:var(--c4);font-size:14px}.ok{color:var(--c6)}
 .shake{animation:sh .35s}@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
-</style>
+.pwbox{position:relative}.pwbox input::-ms-reveal,.pwbox input::-ms-clear{display:none}.pwbox input{padding-right:50px!important}.pwbox .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:40px!important;height:40px;margin:0!important;padding:0!important;border:0!important;border-radius:10px;background:transparent!important;box-shadow:none!important;color:inherit;opacity:.6;cursor:pointer;display:grid;place-items:center}.pwbox .eye:hover,.pwbox .eye.on{opacity:1}.pwbox .eye svg{width:22px;height:22px}.pwbox .eye .sl{display:none}.pwbox .eye.on .sl{display:inline}</style>
 <script>
 const AU = (() => {
   const enc = new TextEncoder(), dec = new TextDecoder();
@@ -81,7 +81,7 @@ const AU = (() => {
 <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M24 6h16M28 6v18L12 52q-3 6 4 6h32q7 0 4-6L36 24V6" fill="none" stroke="#A58DFF" stroke-width="4" stroke-linejoin="round"/><path d="M18 44h28l5 9q1 3-3 3H16q-4 0-3-3z" fill="#33C6C6"/><circle cx="28" cy="38" r="3" fill="#33C6C6"/><circle cx="36" cy="32" r="2" fill="#33C6C6"/></svg>
 <h1>فيزياء السادس العلمي</h1><p class="s">سجّل الدخول للوصول إلى الشرح</p>
 <label for="u">اسم المستخدم</label><input class="ltr" type="text" id="u" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
-<label for="p">كلمة المرور</label><input class="ltr" type="password" id="p" name="password" autocomplete="current-password" required>
+<label for="p">كلمة المرور</label><div class="pwbox"><input class="ltr" type="password" id="p" name="password" autocomplete="current-password" required><button type="button" class="eye" tabindex="-1" aria-label="إظهار كلمة المرور" title="إظهار كلمة المرور" onclick="var i=this.previousElementSibling,s=i.type==='password';i.type=s?'text':'password';this.classList.toggle('on',s);this.title=s?'إخفاء كلمة المرور':'إظهار كلمة المرور';i.focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" d="M4 4l16 16"/></svg></button></div>
 <label class="rem"><input type="checkbox" id="r" checked> تذكّرني على هذا الجهاز</label>
 <button id="b" type="submit">دخول</button><div class="err" id="e" role="alert"></div>
 <noscript><p class="err">يجب تفعيل JavaScript لفتح الصفحة.</p></noscript>
@@ -92,40 +92,236 @@ const EMB = {"it":150000,"ss":"ZNepj26AsulvLl7KLbkwSw==","u":[{"i":"3961e159fabf
 const st = { get() { try { return JSON.parse(localStorage.getItem(SK) || sessionStorage.getItem(SK)); } catch (_) { return null; } },
   set(v, keep) { try { (keep ? localStorage : sessionStorage).setItem(SK, JSON.stringify(v)); } catch (_) {} },
   clear() { try { localStorage.removeItem(SK); sessionStorage.removeItem(SK); } catch (_) {} } };
+// الاشتراك: كل حساب (عدا المدير) له تاريخ انتهاء e في users.json. الحسابات القديمة بدون تاريخ: من 2026-11-01 لمدة شهر.
+var SUB0 = '2026-12-01', SUB_PHONE = '07746451098', SUB_WA = '9647746451098', __SRV = null;
+async function subFetch(fb) {
+  try { const r = await fetch('users.json?t=' + Date.now(), { cache: 'no-store' }); if (r.ok) { const j = await r.json(), t = Date.parse(r.headers.get('Date') || ''); __SRV = t ? t - Date.now() : 0; try { if (t) localStorage.setItem('sub.seen', String(t)); } catch (_) {} return j; } } catch (_) {}
+  return fb;
+}
+function subNow() { if (__SRV !== null) return Date.now() + __SRV; var s = 0; try { s = +localStorage.getItem('sub.seen') || 0; } catch (_) {} return Math.max(Date.now(), s); }
+function subEnd(x) { if (!x || x.a) return null; var d = x.e || SUB0, k = 'sub.e.' + x.i; try { if (__SRV !== null) localStorage.setItem(k, d); else { var o = localStorage.getItem(k); if (o && o > d) d = o; } } catch (_) {} return d; }
+function subMs(d) { return Date.parse(d + 'T00:00:00+03:00'); }
+function subExpired(x) { var d = subEnd(x); return !!d && subNow() >= subMs(d); }
+function subDays(n) { return n === 1 ? 'يوم واحد' : n === 2 ? 'يومين' : n <= 10 ? n + ' أيام' : n + ' يوم'; }
+function subBlock(x) {
+  var d = subEnd(x), f = document.getElementById('f'), t = encodeURIComponent('مرحبا، أريد تجديد اشتراكي في «' + document.title + '»');
+  f.innerHTML = '<div style="text-align:center"><div style="font-size:48px;line-height:1.2">⏰</div><h1>' + (x.tr ? 'انتهت الفترة التجريبية' : 'انتهى اشتراكك') + '</h1>'
+    + '<p class="s" style="margin-bottom:10px">انتهى بتاريخ <b dir="ltr">' + d + '</b><br>لتجديد الاشتراك تواصل ويانا على الرقم:</p>'
+    + '<a href="tel:' + SUB_PHONE + '" dir="ltr" style="display:block;font-size:32px;font-weight:700;letter-spacing:1px;color:var(--c3,#F0A93E);text-decoration:none;margin:4px 0 16px">' + SUB_PHONE + '</a>'
+    + '<div style="display:flex;gap:8px"><a style="flex:1" href="https://wa.me/' + SUB_WA + '?text=' + t + '" target="_blank" rel="noopener"><button type="button" style="width:100%;background:#25D366;color:#fff">واتساب</button></a>'
+    + '<a style="flex:1" href="tel:' + SUB_PHONE + '"><button type="button" class="ghost" style="width:100%">اتصال</button></a></div>'
+    + '<button type="button" class="ghost" id="subOut" style="width:100%;margin-top:10px">دخول بحساب آخر</button></div>';
+  document.getElementById('subOut').onclick = function () { try { localStorage.removeItem(SK); sessionStorage.removeItem(SK); } catch (_) {} location.reload(); };
+}
+function subBadge(html) {
+  var x = window.__SUBENT, d = subEnd(x), b = '', k = JSON.stringify(SK).replace(/"/g, '&quot;');
+  if (d) {
+    var ms = subMs(d) - subNow(), n = Math.max(1, Math.ceil(ms / 864e5)), w = n <= 5;
+    // العدّاد يظهر فقط بآخر 5 أيام من الاشتراك
+    b = (w ? '<div id="__sub" onclick="var s=this.lastChild;s.hidden=!s.hidden" style="color:#fff;background:' + (w ? 'rgba(220,60,80,.95)' : 'rgba(23,26,48,.85)') + ';border-radius:14px;padding:3px 12px;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer;user-select:none">⏳ ' + (x.tr ? 'تجريبي · ' : '') + 'باقي ' + subDays(n)
+      + '<span' + (w ? '' : ' hidden') + '> · ينتهي <span dir="ltr">' + d + '</span> · للتجديد <b dir="ltr">' + SUB_PHONE + '</b></span></div>' : '')
+      + '<script>(function(){var end=' + Math.round(Date.now() + ms) + ';setInterval(function(){if(Date.now()>=end)top.location.reload();},60000);})();<\/script>';
+  }
+  // زر تسجيل الخروج (أيقونة باب أعلى اليسار): يمسح الجلسة من هذا الجهاز ويرجع لصفحة الدخول
+  var o = '<button id="__out" type="button" onclick="if(confirm(\'تسجيل الخروج من هذا الجهاز؟\')){try{localStorage.removeItem(' + k + ');sessionStorage.removeItem(' + k + ')}catch(e){}top.location.reload()}" title="تسجيل خروج" aria-label="تسجيل خروج" style="position:fixed;left:8px;top:8px;z-index:2147483646;width:42px;height:42px;padding:0;margin:0;display:grid;place-items:center;color:#fff;background:rgba(23,26,48,.85);border:0;border-radius:50%;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17"/><circle cx="14.5" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg></button>';
+  b = o + '<div id="__subw" style="position:fixed;left:8px;bottom:34px;z-index:2147483646;max-width:calc(100% - 16px);display:flex;gap:6px;align-items:flex-start;font:12px/1.7 Cairo,Tahoma,sans-serif;direction:rtl">' + WB_BTN + b + '</div>';
+  return html.indexOf('</body>') > -1 ? html.replace('</body>', b + '</body>') : html + b;
+}
+
 var LOCK_URL = 'https://script.google.com/macros/s/AKfycbxth4wUujAKFdXIE6ity7lV-F30gheUUI4x06LLWXGGJnDIR8LWKCOwMnCcapWBP9zcuA/exec';
 var EXEMPT_IDS = ['3961e159fabf243038482967'];
 function deviceId(){ try{ var k='chem6_dev', v=localStorage.getItem(k); if(!v){ v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():(Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)); localStorage.setItem(k,v); } return v; }catch(_){ return 'nostore-'+Math.random().toString(36).slice(2); } }
 async function getIP(){ try{ var c=new AbortController(), t=setTimeout(function(){c.abort();},4000); var r=await fetch('https://api.ipify.org?format=json',{signal:c.signal}); clearTimeout(t); var j=await r.json(); return (j&&j.ip)||''; }catch(_){ return ''; } }
-function deviceGate(id, dev, label, ip){
-  return new Promise(function(resolve){
-    if(!LOCK_URL || LOCK_URL.indexOf('http')!==0){ resolve({ok:true,status:'off'}); return; }
-    var cb='__dg'+Date.now()+Math.floor(Math.random()*1e4), s=document.createElement('script'), done=false;
-    var t=setTimeout(function(){ fin({ok:true,status:'timeout'}); },8000);
-    function fin(r){ if(done)return; done=true; clearTimeout(t); try{delete window[cb];}catch(_){ window[cb]=void 0; } if(s.parentNode)s.parentNode.removeChild(s); resolve(r); }
-    window[cb]=function(r){ fin(r||{ok:true,status:'empty'}); };
-    s.onerror=function(){ fin({ok:true,status:'neterr'}); };
-    s.src=LOCK_URL+'?callback='+cb+'&id='+encodeURIComponent(id)+'&device='+encodeURIComponent(dev)+'&label='+encodeURIComponent(label||'')+'&ip='+encodeURIComponent(ip||'');
-    (document.body||document.documentElement).appendChild(s);
+// ---- قفل الأجهزة والجلسات (v2) ----
+// الخادم الجديد يتحدد من لوحة الإدارة (users.json ← lk)؛ إذا ما متحدد يشتغل الخادم القديم LOCK_URL مثل قبل.
+// الجهاز اللي تأكّد قبل يفتح الكتاب فوراً، والفحص يكمل بالخلفية داخل الكتاب (حتى بطء Google ما يأخّر الفتح).
+// اسم الكتاب = اسم المستودع من الرابط (zraij.github.io/<الكتاب>/)، حتى لو انتسخ هذا الكود لكتاب جديد يشتغل بدون تعديل
+var LOCK_BOOK = (location.pathname.split('/').filter(Boolean)[0] || 'phys6').replace(/[^\w.-]/g, ''), LOCK2_URL = 'https://script.google.com/macros/s/AKfycbx4irPXEPfkpdwV0mF1gTPQBT0tggu_cviNSBr3UWgwfScs4awM-4b-Pv0VJdsolw-s/exec', LOCK_MSG = { locked: 'هذا الحساب مُستخدم على جهاز آخر. راجع الإدارة لتحريره.', blocked: '⛔ هذا الجهاز محظور من الإدارة. للمراجعة: 07746451098', kicked: 'تم تسجيل خروجك من الإدارة، سجّل الدخول مرة ثانية.' };
+var __IPP = getIP(), __LKIP = ''; __IPP.then(function (v) { __LKIP = v || ''; });
+function lsGet(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
+function lsSet(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (_) {} }
+function lockUrl(U) {
+  var u = U && U.lk;
+  if (U && U !== EMB) lsSet('zraij.lk', u || null); else if (!u) u = lsGet('zraij.lk');
+  return /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(u || '') ? u : LOCK2_URL; // الخادم الجديد افتراضياً
+}
+function lockCall(url, p, ms) {
+  return new Promise(function (resolve) {
+    var cb = '__dg' + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement('script'), done = false;
+    var t = setTimeout(function () { fin({ ok: true, status: 'timeout' }); }, ms);
+    function fin(r) { if (done) return; done = true; clearTimeout(t); try { delete window[cb]; } catch (_) { window[cb] = void 0; } if (s.parentNode) s.parentNode.removeChild(s); resolve(r); }
+    window[cb] = function (r) { fin(r || { ok: true, status: 'empty' }); };
+    s.onerror = function () { fin({ ok: true, status: 'neterr' }); };
+    s.src = url + '?callback=' + cb + Object.keys(p).map(function (k) { return '&' + k + '=' + encodeURIComponent(p[k] == null ? '' : p[k]); }).join('');
+    (document.body || document.documentElement).appendChild(s);
   });
 }
-async function enforceDevice(id, label){ if(EXEMPT_IDS.indexOf(id)>-1) return true; var r=await deviceGate(id, deviceId(), label, await getIP()); return !(r && r.ok===false && r.status==='locked'); }
+function deviceGate(id, dev, label, ip) { return LOCK_URL && LOCK_URL.indexOf('http') === 0 ? lockCall(LOCK_URL, { id: id, device: dev, label: label || '', ip: ip || '' }, 8000) : Promise.resolve({ ok: true, status: 'off' }); }
+var __LK = null;
+async function enforceDevice(id, label, U, fast) {
+  var x = EXEMPT_IDS.indexOf(id) > -1, url = lockUrl(U), dev = deviceId(), blk = 'zraij.blk.' + LOCK_BOOK, okk = 'zraij.lkok.' + LOCK_BOOK;
+  window.__LKMSG = ''; __LK = null;
+  if (!url) { if (x) return true; var o = await deviceGate(id, dev, label, await Promise.race([__IPP, new Promise(function (r) { setTimeout(function () { r(''); }, 1500); })])); if (o && o.ok === false && o.status === 'locked') { window.__LKMSG = LOCK_MSG.locked; return false; } return true; }
+  __LK = { u: url, p: { book: LOCK_BOOK, id: id, device: dev, x: x ? 1 : '' } };
+  var bad = lsGet(blk);
+  if (fast && !bad && lsGet(okk) === id + '|' + dev) return true;
+  var ip = await Promise.race([__IPP, new Promise(function (r) { setTimeout(function () { r(''); }, 1500); })]);
+  var r = await lockCall(url, { book: LOCK_BOOK, id: id, device: dev, x: x ? 1 : '', label: label || '', ip: ip, ua: navigator.userAgent.slice(0, 300) }, 9000);
+  if (r && r.ok === false && LOCK_MSG[r.status]) { window.__LKMSG = LOCK_MSG[r.status]; if (r.status === 'blocked') lsSet(blk, '1'); lsSet(okk, null); return false; }
+  if (r && r.ok && (r.status === 'ok' || r.status === 'new')) { lsSet(blk, null); lsSet(okk, id + '|' + dev); return true; }
+  if (bad) { window.__LKMSG = LOCK_MSG.blocked; return false; } // جهاز محظور: ما يفتح حتى لو الخادم ما رد
+  return true;
+}
+// نبضة كل 4 دقائق من داخل الكتاب: تخلي الجلسة «نشطة» بلوحة الإدارة، وإذا الإدارة طلّعت/حظرت الجهاز يرجع لصفحة الدخول
+function lockBeat(html) {
+  if (!__LK) return html;
+  var cfg = JSON.stringify({ u: __LK.u, p: __LK.p, ip: __LKIP, sk: SK, m: LOCK_MSG, b: LOCK_BOOK }).replace(/</g, '\\u003c');
+  var js = '<script>(function(){var C=' + cfg + ',last=0;function go(st){try{localStorage.removeItem(C.sk);sessionStorage.removeItem(C.sk);localStorage.removeItem("zraij.lkok."+C.b);if(st==="blocked")localStorage.setItem("zraij.blk."+C.b,"1");sessionStorage.setItem("zraij.lkmsg",C.m[st]);}catch(e){}top.location.reload();}'
+    + 'function beat(){if(document.hidden)return;var n=Date.now();if(n-last<60000)return;last=n;var cb="__lb"+n,s=document.createElement("script"),t=setTimeout(fin,20000);function fin(){clearTimeout(t);try{delete window[cb]}catch(e){window[cb]=void 0}if(s.parentNode)s.parentNode.removeChild(s);}'
+    + 'window[cb]=function(r){fin();if(r&&r.ok===false&&C.m[r.status])go(r.status);else if(r&&r.ok&&(r.status==="ok"||r.status==="new")){try{localStorage.setItem("zraij.lkok."+C.b,C.p.id+"|"+C.p.device);localStorage.removeItem("zraij.blk."+C.b)}catch(e){}}};s.onerror=fin;'
+    + 'var q="";for(var k in C.p)q+="&"+k+"="+encodeURIComponent(C.p[k]);s.src=C.u+"?callback="+cb+q+"&beat=1&ip="+encodeURIComponent(C.ip||"")+"&ua="+encodeURIComponent(navigator.userAgent.slice(0,300));(document.head||document.documentElement).appendChild(s);}'
+    + 'setTimeout(beat,1500);setInterval(beat,240000);document.addEventListener("visibilitychange",function(){if(!document.hidden)beat();});})();<\/script>';
+  return html.indexOf('</body>') > -1 ? html.replace('</body>', function () { return js + '</body>'; }) : html + js;
+}
+try { var __m = sessionStorage.getItem('zraij.lkmsg'); if (__m) { sessionStorage.removeItem('zraij.lkmsg'); document.getElementById('e').textContent = __m; } } catch (_) {}
+// ---- السبورة: زر داخل الكتاب يقسم الشاشة نصين (نصف الكتاب ونصف سبورة) ----
+// الكتاب ينفتح داخل إطار (book.html) حتى لما تنفتح السبورة يصغر الكتاب ويرتب نفسه على نصف الشاشة.
+if (window.top !== window) { try { if (window.parent.__BOOK) location.replace('book.html'); } catch (_) {} }
+var WB_BTN = '<button id="__wbb" type="button" onclick="try{parent.__wbToggle()}catch(e){}" style="font:inherit;color:#fff;background:rgba(46,125,90,.95);border:0;border-radius:14px;padding:3px 12px;margin:0;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer;white-space:nowrap">🖍️ السبورة</button>';
+function wbOpen(book) {
+  window.__BOOK = book;
+  var head = Array.prototype.map.call(document.querySelectorAll('link[rel="manifest"],link[rel="icon"],link[rel="apple-touch-icon"],meta[name="theme-color"],meta[name="mobile-web-app-capable"],meta[name^="apple-mobile-web-app"]'), function (n) { return n.outerHTML; }).join('');
+  var t = document.title.replace(/[<&]/g, '');
+  var css = 'html,body{margin:0;height:100%;overflow:hidden;background:#0E1020;font-family:Cairo,"Segoe UI",Tahoma,sans-serif}[hidden]{display:none!important}'
+    + '#app{position:fixed;inset:0;display:flex;flex-direction:row;direction:ltr}#app.swap{flex-direction:row-reverse}#app.col{flex-direction:column-reverse}#app.col.swap{flex-direction:column}'
+    + '#bk{flex:1 1 0;min-width:0;min-height:0;position:relative}#fr{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#fff}#app.drag #fr{pointer-events:none}'
+    + '#sp{flex:0 0 14px;cursor:col-resize;background:#2E3358;touch-action:none;display:grid;place-items:center}#app.col #sp{cursor:row-resize}#sp i{width:4px;height:44px;border-radius:4px;background:#9A9CC0}#app.col #sp i{width:44px;height:4px}'
+    + '#wb{flex:0 0 50%;min-width:0;min-height:0;display:flex;flex-direction:column;background:#1E4D3A}'
+    + '#tb{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:6px;background:#171A30;direction:rtl;border-bottom:1px solid #2E3358}'
+    + '#tb button{width:38px;height:38px;border:2px solid transparent;border-radius:10px;background:#20243F;color:#ECEBFA;font-size:18px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}#tb button.on{border-color:#FF8A3D;background:#2E3358}'
+    + '#tb .cl{width:30px;height:30px;border-radius:50%;border:3px solid #20243F}#tb .cl.on{border-color:#FF8A3D;box-shadow:0 0 0 2px #fff}#tb .sz span{display:block;border-radius:50%;background:#ECEBFA}#tb .sep{width:1px;height:28px;background:#2E3358;margin:0 2px}#tb .x{margin-inline-start:auto;background:#5a2232}'
+    + '#cv{flex:1 1 0;position:relative;min-height:0;overflow:hidden;touch-action:none}#c{position:absolute;inset:0;touch-action:none;cursor:crosshair}'
+    + '#cv.g{background:#1E4D3A}#cv.w{background:#fff}#cv.l{background:#fff repeating-linear-gradient(#fff 0 39px,#9cc3e8 39px 40px)}#cv.q{background:#fff;background-image:linear-gradient(#d6e4f0 1px,transparent 1px),linear-gradient(90deg,#d6e4f0 1px,transparent 1px);background-size:28px 28px}';
+  var tb = '<div id="tb">'
+    + ['#ffffff', '#FFD54A', '#FF5A5A', '#4FC3F7', '#66E08A', '#111111'].map(function (c) { return '<button class="cl" data-c="' + c + '" style="background:' + c + '" title="لون"></button>'; }).join('')
+    + '<span class="sep"></span>' + [3, 6, 12].map(function (s) { return '<button class="sz" data-s="' + s + '" title="سمك الخط"><span style="width:' + (s + 3) + 'px;height:' + (s + 3) + 'px"></span></button>'; }).join('')
+    + '<span class="sep"></span><button data-t="pen" title="قلم">✏️</button><button data-t="er" title="ممحاة">🧽</button><button id="un" title="تراجع">↶</button><button id="re" title="إعادة">↷</button><button id="clr" title="مسح السبورة">🗑️</button>'
+    + '<span class="sep"></span><button id="bg" title="شكل السبورة: خضراء / بيضاء / أسطر / مربعات">▦</button><button id="sw" title="تبديل الجهة">⇄</button><button id="fs" title="ملء الشاشة">⛶</button><button class="x" id="cls" title="إغلاق السبورة">✕</button></div>';
+  var body = '<div id="app"><div id="wb" hidden>' + tb + '<div id="cv" class="g"><canvas id="c"></canvas></div></div><div id="sp" hidden><i></i></div>'
+    + '<div id="bk"><iframe id="fr" src="book.html" allow="fullscreen; autoplay; microphone; camera; clipboard-read; clipboard-write; screen-wake-lock" allowfullscreen></iframe></div></div>';
+  var shell = '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' + head + '<title>' + t + '</title><style>' + css + '</style></head><body>' + body + '<script>(' + wbInit.toString() + ')();<\/script></body></html>';
+  document.open(); document.write(shell); document.close();
+}
+function wbInit() {
+  var $ = function (s) { return document.querySelector(s); }, app = $('#app'), wb = $('#wb'), sp = $('#sp'), cv = $('#cv'), c = $('#c'), ctx = c.getContext('2d'), fr = $('#fr');
+  var ls = function (k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (_) { return null; } };
+  var open = false, ratio = +ls('zraij.wb.r') || 0.5, swap = ls('zraij.wb.sw') === '1';
+  var BG = ['g', 'w', 'l', 'q'], bg = BG.indexOf(ls('zraij.wb.bg')) > -1 ? ls('zraij.wb.bg') : 'g';
+  var color = '#ffffff', size = 6, tool = 'pen', strokes = [], redo = [], cur = null, dpr = 1;
+  fr.addEventListener('load', function () { try { fr.contentWindow.focus(); } catch (_) {} });
+  function layout() {
+    var col = innerHeight > innerWidth * 1.1;
+    app.classList.toggle('col', col); app.classList.toggle('swap', swap);
+    wb.style.flexBasis = 'calc(' + (ratio * 100) + '% - 7px)';
+  }
+  function fit() {
+    if (!open) return; var r = cv.getBoundingClientRect(); dpr = window.devicePixelRatio || 1;
+    c.width = Math.max(1, Math.round(r.width * dpr)); c.height = Math.max(1, Math.round(r.height * dpr)); redraw();
+  }
+  function seg(s, a, b) {
+    ctx.globalCompositeOperation = s.e ? 'destination-out' : 'source-over'; ctx.strokeStyle = ctx.fillStyle = s.c; ctx.lineWidth = s.w; ctx.lineCap = ctx.lineJoin = 'round';
+    if (!b) { ctx.beginPath(); ctx.arc(a[0], a[1], s.w / 2, 0, 7); ctx.fill(); return; }
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+  }
+  function drawS(s) {
+    var p = s.p; if (p.length === 1) return seg(s, p[0]);
+    ctx.globalCompositeOperation = s.e ? 'destination-out' : 'source-over'; ctx.strokeStyle = s.c; ctx.lineWidth = s.w; ctx.lineCap = ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]);
+    for (var i = 1; i < p.length - 1; i++) ctx.quadraticCurveTo(p[i][0], p[i][1], (p[i][0] + p[i + 1][0]) / 2, (p[i][1] + p[i + 1][1]) / 2);
+    ctx.lineTo(p[p.length - 1][0], p[p.length - 1][1]); ctx.stroke();
+  }
+  function redraw() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, c.width, c.height); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var st = 0; for (var i = strokes.length - 1; i >= 0; i--) if (strokes[i].clr) { st = i + 1; break; }
+    for (var j = st; j < strokes.length; j++) drawS(strokes[j]);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  function pos(e) { var r = c.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+  c.addEventListener('pointerdown', function (e) {
+    if (cur || (e.pointerType === 'mouse' && e.button !== 0)) return; e.preventDefault();
+    try { c.setPointerCapture(e.pointerId); } catch (_) {}
+    var er = tool === 'er' || e.button === 5;
+    cur = { id: e.pointerId, c: color, w: er ? size * 5 : size, e: er, p: [pos(e)] }; seg(cur, cur.p[0]);
+  });
+  c.addEventListener('pointermove', function (e) {
+    if (!cur || e.pointerId !== cur.id) return; e.preventDefault();
+    var evs = e.getCoalescedEvents ? e.getCoalescedEvents() : []; if (!evs.length) evs = [e];
+    for (var i = 0; i < evs.length; i++) { var q = pos(evs[i]), l = cur.p[cur.p.length - 1]; if (Math.abs(q[0] - l[0]) + Math.abs(q[1] - l[1]) < 1) continue; cur.p.push(q); seg(cur, l, q); }
+    ctx.globalCompositeOperation = 'source-over';
+  });
+  function end(e) { if (!cur || e.pointerId !== cur.id) return; strokes.push(cur); redo = []; cur = null; redraw(); }
+  c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
+  function ui() {
+    document.querySelectorAll('#tb .cl').forEach(function (b) { b.classList.toggle('on', tool === 'pen' && b.dataset.c === color); });
+    document.querySelectorAll('#tb .sz').forEach(function (b) { b.classList.toggle('on', +b.dataset.s === size); });
+    document.querySelectorAll('#tb [data-t]').forEach(function (b) { b.classList.toggle('on', b.dataset.t === tool); });
+    cv.className = bg;
+  }
+  document.querySelectorAll('#tb .cl').forEach(function (b) { b.onclick = function () { color = b.dataset.c; tool = 'pen'; ui(); }; });
+  document.querySelectorAll('#tb .sz').forEach(function (b) { b.onclick = function () { size = +b.dataset.s; ui(); }; });
+  document.querySelectorAll('#tb [data-t]').forEach(function (b) { b.onclick = function () { tool = b.dataset.t; ui(); }; });
+  $('#un').onclick = function () { if (strokes.length) { redo.push(strokes.pop()); redraw(); } };
+  $('#re').onclick = function () { if (redo.length) { strokes.push(redo.pop()); redraw(); } };
+  $('#clr').onclick = function () { if (strokes.length && !strokes[strokes.length - 1].clr) { strokes.push({ clr: 1 }); redo = []; redraw(); } };
+  $('#bg').onclick = function () {
+    bg = BG[(BG.indexOf(bg) + 1) % BG.length]; ls('zraij.wb.bg', bg);
+    // القلم الأبيض ما يبين على السبورة البيضاء والعكس
+    if (bg !== 'g' && color === '#ffffff') color = '#111111'; else if (bg === 'g' && color === '#111111') color = '#ffffff';
+    ui();
+  };
+  $('#sw').onclick = function () { swap = !swap; ls('zraij.wb.sw', swap ? '1' : '0'); layout(); fit(); };
+  $('#fs').onclick = function () { var d = document; if (d.fullscreenElement || d.webkitFullscreenElement) (d.exitFullscreen || d.webkitExitFullscreen).call(d); else { var el = d.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen; if (f) try { f.call(el); } catch (_) {} } };
+  $('#cls').onclick = function () { window.__wbToggle(false); };
+  // سحب الفاصل لتغيير الحجم
+  sp.addEventListener('pointerdown', function (e) {
+    e.preventDefault(); try { sp.setPointerCapture(e.pointerId); } catch (_) {} app.classList.add('drag');
+    function mv(ev) {
+      var col = app.classList.contains('col'), x = col ? ev.clientY / innerHeight : ev.clientX / innerWidth;
+      ratio = Math.min(0.8, Math.max(0.2, col ? (swap ? x : 1 - x) : (swap ? 1 - x : x))); layout();
+    }
+    function up() { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); app.classList.remove('drag'); ls('zraij.wb.r', String(ratio)); fit(); }
+    addEventListener('pointermove', mv); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+  });
+  window.__wbToggle = function (v) {
+    open = typeof v === 'boolean' ? v : !open; wb.hidden = sp.hidden = !open;
+    if (open && bg !== 'g' && color === '#ffffff') color = '#111111';
+    layout(); ui(); fit();
+  };
+  if (window.ResizeObserver) new ResizeObserver(function () { fit(); }).observe(cv);
+  addEventListener('resize', function () { layout(); fit(); });
+  layout(); ui();
+}
 async function openWith(raw) {
   const z = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: AU.ub(CT.iv) }, await AU.kimp(raw, ['decrypt']), AU.ub(CT.d));
   const html = await new Response(new Blob([z]).stream().pipeThrough(new DecompressionStream('deflate'))).text();
   var __CR='<div style="position:fixed;left:0;right:0;bottom:0;z-index:2147483647;text-align:center;font:12px/1.7 Cairo,Tahoma,sans-serif;color:#9A9CC0;background:rgba(14,16,32,.82);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);padding:5px 10px;direction:rtl;pointer-events:none">تصميم وبرمجة: <b style=\"color:#A58DFF\">حسام عبدالمنعم</b> · <span dir=\"ltr\">07746451098</span> · © 2026</div>';
   var __out = html.indexOf('</body>') > -1 ? html.replace('</body>', __CR + '</body>') : html + __CR;
+  __out = lockBeat(subBadge(__out));
   // PWA: نعيد روابط التطبيق (الأيقونة والـ manifest) للصفحة بعد فتح المحتوى حتى يبقى التثبيت متاحاً
   var __PWA = Array.prototype.map.call(document.querySelectorAll('link[rel="manifest"],link[rel="icon"],link[rel="apple-touch-icon"],meta[name="theme-color"],meta[name="mobile-web-app-capable"],meta[name^="apple-mobile-web-app"]'), function (n) { return n.outerHTML; }).join('');
   if (__PWA) __out = /<head[^>]*>/i.test(__out) ? __out.replace(/<head[^>]*>/i, function (h) { return h + __PWA; }) : __PWA + __out;
-  document.open(); document.write(__out); document.close();
+  wbOpen(__out);
 }
-const usersP = AU.fetchUsers(EMB);
+const usersP = subFetch(EMB);
 (async () => {
   const s = st.get();
   if (s && s.k && s.i) {
     const U = await usersP;
-    if (U.u.some((x) => x.i === s.i)) {
-      if (!(await enforceDevice(s.i, ''))) { st.clear(); document.getElementById('e').textContent = 'هذا الحساب مُستخدم على جهاز آخر. راجع الإدارة لتحريره.'; document.getElementById('u').focus(); return; }
+    const __ent = U.u.find((x) => x.i === s.i);
+    if (__ent) {
+      if (subExpired(__ent)) { subBlock(__ent); return; }
+      window.__SUBENT = __ent;
+      if (!(await enforceDevice(s.i, '', U, 1))) { st.clear(); document.getElementById('e').textContent = window.__LKMSG || 'هذا الحساب مُستخدم على جهاز آخر. راجع الإدارة لتحريره.'; document.getElementById('u').focus(); return; }
       try { await openWith(AU.ub(s.k)); return; } catch (_) {}
     }
     st.clear();
@@ -139,7 +335,9 @@ document.getElementById('f').onsubmit = async (ev) => {
   try {
     const r = await AU.unwrap(await usersP, document.getElementById('u').value, document.getElementById('p').value);
     if (!r) { er.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة'; f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); b.disabled = false; b.textContent = 'دخول'; return; }
-    if (!(await enforceDevice(r.entry.i, document.getElementById('u').value))) { er.textContent = 'هذا الحساب مُستخدم على جهاز آخر. راجع الإدارة لتحريره.'; f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); b.disabled = false; b.textContent = 'دخول'; return; }
+    if (subExpired(r.entry)) { subBlock(r.entry); return; }
+    window.__SUBENT = r.entry;
+    if (!(await enforceDevice(r.entry.i, document.getElementById('u').value, await usersP))) { er.textContent = window.__LKMSG || 'هذا الحساب مُستخدم على جهاز آخر. راجع الإدارة لتحريره.'; f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); b.disabled = false; b.textContent = 'دخول'; return; }
     st.set({ k: AU.bu(r.raw), i: r.entry.i }, document.getElementById('r').checked || r.entry.d === 1);
     await openWith(r.raw);
   } catch (x) { er.textContent = 'تعذّر فتح الصفحة على هذا المتصفح، جرّب متصفحاً أحدث.'; b.disabled = false; b.textContent = 'دخول'; }

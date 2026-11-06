@@ -2,8 +2,8 @@
    يخلي البرنامج قابل للتثبيت كتطبيق. الصفحة تُجلب من الشبكة دائمًا أولاً
    (حتى توصل التحديثات فورًا)، والنسخة المحفوظة تُستخدم فقط عند انقطاع الإنترنت.
    ملفات الحسابات (users.json) وطلبات Google وأي رابط خارجي لا تُخزَّن أبدًا. */
-const CACHE = 'phys6-pwa-v1';
-const SHELL = ['./', './index.html', './install.html', './manifest.webmanifest',
+const CACHE = 'phys6-pwa-v2';
+const SHELL = ['./', './index.html', './book.html', './install.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', e => {
